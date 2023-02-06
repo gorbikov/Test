@@ -13,20 +13,29 @@ blue = np.array([np.random.normal(1, stDev, dotNumber), np.random.normal(0, 4*st
 generatedDf = pd.concat([pd.DataFrame(red).transpose(), pd.DataFrame(green).transpose(), pd.DataFrame(blue).transpose()], ignore_index='true')
 generatedDf.columns = ['X', 'Y', 'Color']
 
-sns.scatterplot(data=generatedDf, x='X', y='Y', hue='Color')
-matplotlib.pyplot.show()
-
-#KNN
-from sklearn.neighbors import KNeighborsRegressor
-regressor = KNeighborsRegressor(n_neighbors=5)
+#Оптимальный Байесовый классификатор
+from sklearn.naive_bayes import GaussianNB
+regressor = GaussianNB()
 regressor.fit(generatedDf.drop(['Color'], axis=1), generatedDf['Color'])
 
-resolution = 10
+#KNN
+# from sklearn.neighbors import KNeighborsRegressor
+# regressor = KNeighborsRegressor(n_neighbors=5)
+# regressor.fit(generatedDf.drop(['Color'], axis=1), generatedDf['Color'])
 
-x_test=pd.DataFrame([np.array(range(resolution))/resolution-1.5, np.array(range(resolution))/resolution-1.5]).transpose()
-print(x_test)
+resolution = 100
+x_min = -1.5
+x_max = 1.5
+y_min = -2
+y_max = 4
 
+grid = np.meshgrid(np.arange(x_min, x_max, 1/resolution), np.arange(y_min, y_max, 1/resolution))
+xx, yy = grid
 
-print(np.array(range(resolution), dtype=np.float32)/resolution)
+predicted = regressor.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+matplotlib.pyplot.pcolormesh(xx, yy, predicted, cmap='autumn')
+sns.scatterplot(data=generatedDf, x='X', y='Y', hue='Color')
+matplotlib.pyplot.show()
+print('Done')
 
-# y_pred = regressor.predict(x_test)
+#По итогу Оптимальный Байесовый - более выпуклый. Поэтому слева-направо: Байесовый, KNN, Tree.
